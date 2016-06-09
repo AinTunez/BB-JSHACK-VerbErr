@@ -50,12 +50,10 @@
         par > 19 ? startText += input.substr(10, par - 9) + '\n\t..........' : startText += input.substr(10, 500);
 
         var fullText = startText + endText;
-        if (fullText.slice(0, -5) !== ' more') {
-            while (fullText.charAt(fullText.length -1) !== ')') {                
-                fullText = fullText.slice(0, -1);
-            }
-            fullText += '\n\t..........';        
+        while (fullText.charAt(fullText.length -1) !== ')') {                
+            fullText = fullText.slice(0, -1);
         }
+        fullText += '\n\t..........';
         return fullText;
     }
 
@@ -100,7 +98,7 @@
     }
 
     function addHelpText() {
-        
+
     }
 
 </script>
