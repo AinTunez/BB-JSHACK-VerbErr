@@ -1,0 +1,125 @@
+<script type="text/javascript">
+    Event.observe(document,"dom:loaded", function() {
+        var errId = document.getElementsByClassName('captionText')[0];
+        if (errId) {
+            var parent = errId.parentNode;
+            for (var i = 0; i < parent.childNodes.length; i++) {
+                if (parent.childNodes[i].nodeType == 8) {
+                    addHeader(parent);
+                    addStackTrace(parent.childNodes[i]);
+                    break;
+                }
+            }
+        }
+    });
+
+    function addHeader(parent) { //create the header
+        var h = document.createElement('h3');
+        h.textContent = 'STACK TRACE';
+        document.getElementById('containerdiv').appendChild(h);
+    }
+
+    function addStackTrace(child) { //add the stack trace to the page
+
+        var stackTrace = document.createElement('pre');        
+        stackTrace.setAttribute('class', 'hi');
+
+        var code = document.createElement('code');
+        code.setAttribute('class', 'java');
+        code.textContent = makeText(child.data);
+        code.innerHTML = highlight(code.innerHTML);
+
+        stackTrace.appendChild(code);
+        document.getElementById('containerdiv').appendChild(stackTrace);
+    }
+
+    function makeText(input) { //convert commented stack trace to truncated <pre> text
+
+        var startText = '';
+        var endText = '';
+
+        //if a "caused by" section exists, add and truncate it
+        var caused = input.indexOf('\nCaused by:');        
+        if (caused > -1) {
+            endText += input.substr(caused, 500);            
+        }
+
+        //add and truncate the normal stack trace
+        var par;
+        caused > -1 && caused < 500 ? par = input.indexOf(')', caused - 20) : par = input.indexOf(')', 500);
+        par > 19 ? startText += input.substr(10, par - 9) + '\n\t..........' : startText += input.substr(10, 500);
+
+        var fullText = startText + endText;
+        if (fullText.slice(0, -5) !== ' more') {
+            while (fullText.charAt(fullText.length -1) !== ')') {                
+                fullText = fullText.slice(0, -1);
+            }
+            fullText += '\n\t..........';        
+        }
+        return fullText;
+    }
+
+    function highlight(oldHTML) { //convert <pre> text to highlighted HTML
+        var newHTML = ''; //string representing HTML
+        var startInd = 0;
+        var endInd = 1;        
+        while (startInd < oldHTML.length && endInd < oldHTML.length) { //separate the words by special characters and analyze each
+            var char = oldHTML.charAt(endInd);
+            if (char.match(/[:.()]|\s/) || char === void 0) {                
+                newHTML += highlightWord(oldHTML, startInd, endInd) + char; //add the word to newHTML                                     
+                startInd = endInd + 1;
+                endInd = startInd + 1;
+            }  else {
+                endInd++;                
+            }
+        }
+        return newHTML;
+    }
+
+    function highlightWord(oldHTML, start, end) { //style a word if it fits the criteria      
+
+        //get the word to be checked
+        var word = oldHTML.substring(start, end);
+        if (end - start === 1) return word;                
+
+        //see if the word fits any criteria
+        var className = ''; 
+        if (word === 'at') {
+            className = 'keyword';
+        } else if (!isNaN(Number(word))) {
+            className = 'num';
+        } else if (word === 'blackboard') {
+            className = 'bb';
+        } else if (word.substring(word.length - 9) === 'Exception')  {
+            className = 'err';
+        }
+
+        //if the word fits any criteria, give it that style
+        if (className !== '') return '<span class="' + className + '">' + word + '</span>';
+        return word;
+    }
+
+    function addHelpText() {
+        
+    }
+
+</script>
+<style>
+    pre.hi {
+        background: #F0F0F0;
+        font-family: "Consolas", "Courier", monospace;
+    }
+    pre.hi .java .keyword {
+        color: darkblue;
+        font-weight: bold;
+    }
+    pre.hi .java .num {
+        color: darkviolet;
+    }
+    pre.hi .java .err {
+        color: darkred;        
+    }
+    pre.hi .java .bb {
+        color: darkgreen;        
+    }
+</style>
